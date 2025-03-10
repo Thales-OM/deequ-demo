@@ -1,0 +1,15 @@
+# Python
+__pycache__
+.ipynb_checkpoints
+.venv
+
+# Scala
+.metals
+.scala-build
+
+# VS Code
+.vscode
+
+# Redundant files
+pydeequ-example
+data

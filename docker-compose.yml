@@ -1,0 +1,43 @@
+version: '3'
+services:
+  kafka:
+    container_name: kafka
+    image: apache/kafka-native
+    ports:
+      - "9092:9092"
+    environment:
+      # Configure listeners for both docker and host communication
+      KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: HOST://localhost:9092,DOCKER://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
+
+      # Settings required for KRaft mode
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
+
+      # Listener to use for broker-to-broker communication
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+
+      # Required for a single node cluster
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  data-generator:
+    container_name: data-generator
+    build: ./data-generator
+    environment:
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+      - KAFKA_TOPIC_NAME=${KAFKA_TOPIC_NAME}
+    # Uncomment to add default arguments
+    # command: ["--batches", "1000"]  # limit to sending 1000 batches
+    # command: ["--time", "600"]  # 10 minute default run
+    # command: ["--sleep-time", "1.0"]  # sleep for 1 sec between sending batches
+  spark-processor:
+    container_name: spark-processor
+    build: ./spark-processor
+    ports:
+      - "4040:4040" # Spark UI port (optional)
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BROKERS} # Kafka broker address
+
+  
