@@ -1,4 +1,5 @@
 from kafka import KafkaProducer
+from kafka.errors import NoBrokersAvailable
 import pandas as pd
 import numpy as np
 import time
@@ -10,9 +11,9 @@ import logging
 from logger_setup import setup_logging
 
 # Configuration
-KAFKA_BROKERS = os.getenv('KAFKA_BROKERS', 'kafka:9093')
+KAFKA_BROKER = os.getenv('KAFKA_BROKER', 'kafka:9093')
 KAFKA_TOPIC_NAME = os.getenv('KAFKA_TOPIC_NAME', 'data-stream')
-BATCH_SIZE = 50000
+DEFAULT_BATCH_SIZE = 10000
 DEFAULT_SLEEP_TIME = 1.0
 SEED = 42
 
@@ -30,24 +31,31 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
-
-def create_producer():
-    return KafkaProducer(
-        bootstrap_servers=KAFKA_BROKERS,
-        value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-        # batch_size=16384,
-        linger_ms=100
-    )
+def create_producer(): 
+    while True: 
+        try: 
+            producer = KafkaProducer( 
+                bootstrap_servers=KAFKA_BROKER, 
+                value_serializer=lambda v: json.dumps(v).encode('utf-8'), 
+                # batch_size=16384, 
+                linger_ms=100 
+            ) 
+            # Test the connection by sending a metadata request producer.bootstrap_connected() 
+            return producer 
+        except NoBrokersAvailable: 
+            logger.debug("Waiting for brokers to be available...") 
+            time.sleep(5) # Wait for 5 seconds before retrying
 
 def main():
     parser = argparse.ArgumentParser(description='Data Generator')
+    parser.add_argument('--batch-size', type=int, help='Size of one batch', default=DEFAULT_BATCH_SIZE)
     parser.add_argument('--batches', type=int, help='Number of batches to generate')
     parser.add_argument('--time', type=int, help='Run duration in seconds')
     parser.add_argument('--sleep-time', type=float, help='Time to sleep between sending batches, in seconds', default=DEFAULT_SLEEP_TIME)
     args = parser.parse_args()
 
     output_dir = "/app/data"
-    batch_size = BATCH_SIZE
+    batch_size = args.batch_size
     batch_count = 0
     start_time = time.time()
 
@@ -70,18 +78,18 @@ def main():
 
         # Generate data
         batch = {
-            'id': batch_count * batch_size + np.arange(batch_size),
+            'id': (batch_count * batch_size + np.arange(batch_size)).tolist(),
             'timestamp': [time.time()] * batch_size,
-            'value': rng.random(batch_size), # Random floats in [0.0, 1.0)
-            'type': rng.choice(('car', 'bike', 'plane', 'motorcycle'), size=batch_size)
+            'value': rng.random(batch_size).tolist(), # Random floats in [0.0, 1.0)
+            'type': rng.choice(('car', 'bike', 'plane', 'motorcycle'), size=batch_size).tolist()
         }
         batch_count += 1
         logger.debug(f"Generated batch #{batch_count}.")
 
         producer.send(KAFKA_TOPIC_NAME, value=batch)
-        logger.debug(f"Batch #{batch_count} sent to Kafka.")
+        logger.info(f"Batch #{batch_count} sent to Kafka.")
     
-        logger.debug(f"Sleeping for {args.sleep_time} seconds...")
+        logger.info(f"Sleeping for {args.sleep_time} seconds...")
         time.sleep(args.sleep_time)
 
 if __name__ == "__main__":

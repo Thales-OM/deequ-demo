@@ -21,22 +21,34 @@ services:
 
       # Required for a single node cluster
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_NUM_PARTITIONS: 3
+  
   data-generator:
     container_name: data-generator
     build: ./data-generator
     environment:
-      - KAFKA_BROKERS=${KAFKA_BROKERS}
+      - KAFKA_BROKER=${KAFKA_BROKER}
       - KAFKA_TOPIC_NAME=${KAFKA_TOPIC_NAME}
     # Uncomment to add default arguments
+    # command: ["--batch-size", "10000"]  # each batch will have 10000 messages
     # command: ["--batches", "1000"]  # limit to sending 1000 batches
     # command: ["--time", "600"]  # 10 minute default run
     # command: ["--sleep-time", "1.0"]  # sleep for 1 sec between sending batches
+  
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8082:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: true
+  
   spark-cleansed:
     container_name: spark-cleansed
     build: ./spark-cleansed
     ports:
       - "4040:4040" # Spark UI port (optional)
     environment:
-      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BROKERS} # Kafka broker address
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BROKER} # Kafka broker address
 
   
