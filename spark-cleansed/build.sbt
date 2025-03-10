@@ -1,9 +1,9 @@
 // build.sbt
-name := "MyScalaApp"
-
+scalaVersion := "2.12.2"
 version := "1.0"
 
-scalaVersion := "2.12.15" // Use Scala 2.12.15
+name := "scala_app"
+organization := "com.scala_app"
 
 // Add Spark, Kafka, and Deequ dependencies
 libraryDependencies ++= Seq(
@@ -15,9 +15,6 @@ libraryDependencies ++= Seq(
 )
 
 resolvers ++= Seq(
-  "Sbt plugins"                   at "https://dl.bintray.com/sbt/sbt-plugin-releases",
-  "Maven Central Server"          at "https://repo1.maven.org/maven2",
-  "TypeSafe Repository Releases"  at "https://repo.typesafe.com/typesafe/releases/",
-  "TypeSafe Repository Snapshots" at "https://repo.typesafe.com/typesafe/snapshots/"
+  "Maven Central Server"          at "https://repo1.maven.org/maven2"
 )
 
