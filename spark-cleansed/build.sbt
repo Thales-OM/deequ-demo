@@ -21,12 +21,3 @@ resolvers ++= Seq(
   "TypeSafe Repository Snapshots" at "https://repo.typesafe.com/typesafe/snapshots/"
 )
 
-lazy val app = (project in file("app"))
-  .settings(
-    assembly / mainClass := Some("com.spark.streaming.structured.SparkStructuredStreaming")
-  )
-
-lazy val utils = (project in file("utils"))
-  .settings(
-    assembly / assemblyJarName := "utils.jar"
-  )

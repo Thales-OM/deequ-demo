@@ -4,9 +4,10 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import com.amazon.deequ.VerificationSuite
-import com.amazon.deequ.checks.{Check, CheckLevel}
+import com.amazon.deequ.{VerificationSuite, VerificationResult}
+import com.amazon.deequ.checks.{Check, CheckLevel, CheckStatus}
 import com.amazon.deequ.constraints.ConstraintStatus
+import org.apache.spark.sql.DataFrame
 
 object SparkStructuredStreaming {
 
@@ -71,11 +72,6 @@ object SparkStructuredStreaming {
         println("Data quality checks passed!")
       } else {
         println("Data quality checks failed!")
-        verificationResult.constraints.foreach { constraint =>
-          if (constraint.status != ConstraintStatus.Success) {
-            println(s"Constraint '${constraint.constraint}' failed: ${constraint.message.getOrElse("")}")
-          }
-        }
       }
     }
 
