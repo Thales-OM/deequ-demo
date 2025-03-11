@@ -1,0 +1,17 @@
+<configuration>
+    <!-- Appender for console output -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Suppress logs for specific packages -->
+    <logger name="org.apache.spark" level="OFF" />
+    <logger name="com.amazon.deequ" level="OFF" />
+
+    <!-- Set log level for the root logger (optional) -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
